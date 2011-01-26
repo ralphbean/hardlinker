@@ -84,9 +84,9 @@ def isAlreadyHardlinked(
     st1,     # first file's status
     st2 ):    # second file's status
     result = (
-                      (st1[stat.ST_INO] == st2[stat.ST_INO]) and # Inodes equal
-                      (st1[stat.ST_DEV] == st2[stat.ST_DEV])     # Devices equal
-                  );
+        (st1[stat.ST_INO] == st2[stat.ST_INO]) and # Inodes equal
+        (st1[stat.ST_DEV] == st2[stat.ST_DEV])     # Devices equal
+    )
     return result
 
 # if a file is eligibile for hardlinking.  Files will only be considered for
@@ -412,9 +412,25 @@ def parseCommandLine():
         help="Filenames have to be identical",
         action="store_true", dest="samename", default=False,)
 
-    parser.add_option("-t", "--timestamp-ignore",
+    parser.add_option(
+        "-t", "--ignore-timestamp",
         help="File modification times do NOT have to be identical",
         action="store_true", dest="notimestamp", default=False,)
+
+    parser.add_option(
+        "-m", "--ignore-mode",
+        help="File modes do NOT have to be identical",
+        action="store_true", dest="nofilemode", default=False,)
+
+    parser.add_option(
+        "-u", "--ignore-uid",
+        help="File owner user ids do NOT have to be identical",
+        action="store_true", dest="nouid", default=False,)
+
+    parser.add_option(
+        "-g", "--ignore-gid",
+        help="File owner group ids do NOT have to be identical",
+        action="store_true", dest="nogid", default=False,)
 
     parser.add_option(
         "-n", "--dry-run", help="Do NOT actually hardlink files",
@@ -465,7 +481,7 @@ gStats = cStatistics()
 
 file_hashes = {}
 
-VERSION = "0.04 - 2007-11-14 (14-Nov-2007)"
+VERSION = "0.05 - 2010-01-26"
 
 def main():
     # Parse our argument list and get our list of directories
