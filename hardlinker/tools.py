@@ -1,60 +1,60 @@
 #!/usr/bin/python
+"""
+ hardlink - Goes through a directory structure and creates hardlinks for
+ files which are identical.
 
-# hardlink - Goes through a directory structure and creates hardlinks for
-# files which are identical.
-#
-# Copyright (C) 2003 - 2007  John L. Villalovos, Hillsboro, Oregon
-#
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-# more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc., 59
-# Temple Place, Suite 330, Boston, MA  02111-1307, USA.
-#
-#
-# ------------------------------------------------------------------------
-#
-# Forked project url: http://github.com/ralphbean/hardlinker/
-# Original project url:  http://code.google.com/p/hardlinkpy/
-#
-# AUTHORS
-#
-# John Villalovos
-# email: john@sodarock.com
-# http://www.sodarock.com/
-#
-# Ralph Bean
-# email: ralph.bean@gmail.com
-# http://threebean.wordpress.com/
-#
-# Inspiration for this program came from the hardlink.c code. I liked what it
-# did but did not like the code itself, to me it was very unmaintainable.  So I
-# rewrote in C++ and then I rewrote it in python.  In reality this code is
-# nothing like the original hardlink.c, since I do things quite differently.
-# Even though this code is written in python the performance of the python
-# version is much faster than the hardlink.c code, in my limited testing.  This
-# is mainly due to use of different algorithms.
-#
-# Original inspirational hardlink.c code was written by:  Jakub Jelinek
-# <jakub@redhat.com>
-#
-# ------------------------------------------------------------------------
-#
-# TODO:
-#   *   Thinking it might make sense to walk the entire tree first and collect
-#       up all the file information before starting to do comparisons.  Thought
-#       here is we could find all the files which are hardlinked to each other
-#       and then do a comparison.  If they are identical then hardlink
-#       everything at once.
+ Copyright (C) 2003 - 2007  John L. Villalovos, Hillsboro, Oregon
 
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2 of the License, or (at your option) any later
+ version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ more details.
+
+ You should have received a copy of the GNU General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+
+
+ ------------------------------------------------------------------------
+
+ Forked project url: http://github.com/ralphbean/hardlinker/
+ Original project url:  http://code.google.com/p/hardlinkpy/
+
+ AUTHORS
+
+ John Villalovos
+ email: john@sodarock.com
+ http://www.sodarock.com/
+
+ Ralph Bean
+ email: ralph.bean@gmail.com
+ http://threebean.wordpress.com/
+
+ Inspiration for this program came from the hardlink.c code. I liked what it
+ did but did not like the code itself, to me it was very unmaintainable.  So I
+ rewrote in C++ and then I rewrote it in python.  In reality this code is
+ nothing like the original hardlink.c, since I do things quite differently.
+ Even though this code is written in python the performance of the python
+ version is much faster than the hardlink.c code, in my limited testing.  This
+ is mainly due to use of different algorithms.
+
+ Original inspirational hardlink.c code was written by:  Jakub Jelinek
+ <jakub@redhat.com>
+
+ ------------------------------------------------------------------------
+
+ TODO:
+   *   Thinking it might make sense to walk the entire tree first and collect
+       up all the file information before starting to do comparisons.  Thought
+       here is we could find all the files which are hardlinked to each other
+       and then do a comparison.  If they are identical then hardlink
+       everything at once.
+"""
 
 from gstats import gStats
 from __init__ import __version__
@@ -68,8 +68,8 @@ import hashlib
 
 from optparse import OptionParser
 
-# Hash functions
 def hash_value(stat_info, options):
+    """ Produce a hash value optionally including certain file params """
     h = hashlib.md5()
 
     # We add size by default :P
@@ -88,9 +88,8 @@ def hash_value(stat_info, options):
 
     return str(h.hexdigest())
 
-# If two files have the same inode and are on the same device then they are
-# already hardlinked.
 def isAlreadyHardlinked(
+    """ True is two files have the same inode and are on the same device """
     st1,     # first file's status
     st2 ):    # second file's status
     result = (
@@ -99,12 +98,16 @@ def isAlreadyHardlinked(
     )
     return result
 
-# if a file is eligibile for hardlinking.  Files will only be considered for
-# hardlinking if this function returns true.
-def eligibleForHardlink(
-    st1,        # first file's status
-    st2,        # second file's status
-    options):
+def eligibleForHardlink(st1, st2, options):
+    """ Evaluates a number of criteria to see if two files should be hardlinked
+
+    :param st1 first file's info
+    
+    :param st2 second file's info
+
+    :param options from the command line
+
+    """
 
     options.__noopt__ = False
     criteria = {
@@ -138,8 +141,10 @@ def eligibleForHardlink(
 
 def areFileContentsEqual(filename1, filename2, options):
     """Determine if the contents of two files are equal.
-    **!! This function assumes that the file sizes of the two files are
-    equal."""
+
+    **!! This function assumes that the file sizes of the two files are equal.
+    
+    """
     # Open our two files
     file1 = open(filename1,'rb')
     file2 = open(filename2,'rb')
@@ -167,14 +172,17 @@ def areFileContentsEqual(filename1, filename2, options):
         gStats.didComparison()
     return result
 
-# Determines if two files should be hard linked together.
 def areFilesHardlinkable(file_info_1, file_info_2, options):
+    """ Determines if two files should be hardlinked together """
     filename1 = file_info_1[0]
     stat_info_1 = file_info_1[1]
     filename2 = file_info_2[0]
     stat_info_2 = file_info_2[1]
     # See if the files are eligible for hardlinking
     if eligibleForHardlink(stat_info_1, stat_info_2, options):
+        # TODO -- simplify all this into eligible for hardlink
+
+
         # Now see if the contents of the file are the same.  If they are then
         # these two files should be hardlinked.
         if not options.samename:
@@ -192,8 +200,9 @@ def areFilesHardlinkable(file_info_1, file_info_2, options):
         result = False
     return result
 
-# Hardlink two files together
 def hardlinkfiles(sourcefile, destfile, stat_info, options):
+    """ hardlink two files together """
+
     # rename the destination file to save it
     temp_name = destfile + ".$$$___cleanit___$$$"
     try:
@@ -256,7 +265,9 @@ def hardlink_identical_files(directories, filename, options):
      For any other files which share this hash make sure that they are not
      identical to this file.  If they are identical then hardlink the files.
 
-     Add the file info to the list of files that have the same hash value."""
+     Add the file info to the list of files that have the same hash value.
+     
+     """
 
     for exclude in options.excludes:
         if re.search(exclude, filename):
@@ -417,6 +428,11 @@ def parseCommandLine():
 file_hashes = {}
 
 def main():
+    """ main entry point
+
+    TODO -- actually use python `entry_points`
+    """
+
     # Parse our argument list and get our list of directories
     options, directories = parseCommandLine()
     # Compile up our regexes ahead of time
