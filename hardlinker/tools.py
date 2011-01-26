@@ -9,13 +9,18 @@ import os
 import re
 import stat
 import sys
-import hashlib
+
+# Python 2.4 backwards compatibility :/
+try:
+    from hashlib import md5
+except ImportError, e:
+    from md5 import md5
 
 from optparse import OptionParser
 
 def hash_value(stat_info, options):
     """ Produce a hash value optionally including certain file params """
-    h = hashlib.md5()
+    h = md5()
 
     # We add size by default :P
     h.update(str(stat_info[stat.ST_SIZE]))
