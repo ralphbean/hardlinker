@@ -57,6 +57,7 @@
 
 
 from gstats import gStats
+from __init__ import __version__
 
 import getopt
 import os
@@ -315,7 +316,7 @@ def hardlink_identical_files(directories, filename, options):
             file_hashes[file_hash] = [work_file_info]
 
 def printversion(self):
-    print "hardlink.py, Version %s" % VERSION
+    print "hardlink.py, Version %s" % __version__
     print "Copyright (C) 2003 - 2006 John L. Villalovos."
     print "email: software@sodarock.com"
     print "web: http://www.sodarock.com/"
@@ -336,7 +337,7 @@ Place, Suite 330, Boston, MA  02111-1307, USA.
 
 def parseCommandLine():
     usage = "usage: %prog [options] directory [ directory ... ]"
-    version = "%prog: " + VERSION
+    version = "%prog: " + __version__
     parser = OptionParser(usage=usage, version=version)
 
     parser.add_option(
@@ -414,8 +415,6 @@ def parseCommandLine():
 
 
 file_hashes = {}
-
-VERSION = "0.05 - 2010-01-26"
 
 def main():
     # Parse our argument list and get our list of directories
