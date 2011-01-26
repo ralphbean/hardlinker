@@ -6,7 +6,7 @@ from hardlinker import __version__
 setup(name='hardlinker',
       version=__version__,
       description="Find identical files and hardlink them",
-      long_description="""Forked from hardlink.py by John L. Villalovos"""
+      long_description="""Forked from hardlink.py by John L. Villalovos""",
       classifiers=[],
       keywords='',
       author='Ralph Bean',
@@ -19,7 +19,7 @@ setup(name='hardlinker',
       install_requires=[
           # -*- Extra requirements: -*-
       ],
-      scripts=['scripts/hardlinker.py']
+      scripts=['scripts/hardlink.py'], # blame pfmeec@rit.edu
       entry_points="""
       # -*- Entry points: -*-
       """,

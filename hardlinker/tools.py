@@ -33,10 +33,8 @@ def hash_value(stat_info, options):
 
     return str(h.hexdigest())
 
-def isAlreadyHardlinked(
+def isAlreadyHardlinked(st1, st2):
     """ True is two files have the same inode and are on the same device """
-    st1,     # first file's status
-    st2 ):    # second file's status
     result = (
         (st1[stat.ST_INO] == st2[stat.ST_INO]) and # Inodes equal
         (st1[stat.ST_DEV] == st2[stat.ST_DEV])     # Devices equal
