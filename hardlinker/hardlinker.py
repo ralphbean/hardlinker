@@ -407,29 +407,37 @@ def parseCommandLine():
     usage = "usage: %prog [options] directory [ directory ... ]"
     version = "%prog: " + VERSION
     parser = OptionParser(usage=usage, version=version)
-    parser.add_option("-f", "--filenames-equal", help="Filenames have to be identical",
+    parser.add_option(
+        "-f", "--filenames-equal",
+        help="Filenames have to be identical",
         action="store_true", dest="samename", default=False,)
-
-    parser.add_option("-n", "--dry-run", help="Do NOT actually hardlink files",
-        action="store_true", dest="dryrun", default=False,)
-
-    parser.add_option("-p", "--print-previous", help="Print previously created hardlinks",
-        action="store_true", dest="printprevious", default=False,)
-
-    parser.add_option("-q", "--no-stats", help="Do not print the statistics",
-        action="store_false", dest="printstats", default=True,)
 
     parser.add_option("-t", "--timestamp-ignore",
         help="File modification times do NOT have to be identical",
         action="store_true", dest="notimestamp", default=False,)
 
-    parser.add_option("-v", "--verbose",
-        help="Verbosity level (default: %default)", metavar="LEVEL",
-        action="store", dest="verbose", default=1,)
+    parser.add_option(
+        "-n", "--dry-run", help="Do NOT actually hardlink files",
+        action="store_true", dest="dryrun", default=False,)
 
-    parser.add_option("-x", "--exclude",
-        help="Regular expression used to exclude files/dirs (may specify multiple times)", metavar="REGEX",
-        action="append", dest="excludes", default=[],)
+    parser.add_option(
+        "-p", "--print-previous", help="Print previously created hardlinks",
+        action="store_true", dest="printprevious", default=False,)
+
+    parser.add_option(
+        "-q", "--no-stats", help="Do not print the statistics",
+        action="store_false", dest="printstats", default=True,)
+
+
+    parser.add_option(
+        "-v", "--verbose", help="Verbosity level (default: %default)",
+        metavar="LEVEL", action="store", dest="verbose", default=1,)
+
+    parser.add_option(
+        "-x", "--exclude",
+        help="Regular expression used to exclude files/dirs " + \
+        "(may specify multiple times)",
+        metavar="REGEX", action="append", dest="excludes", default=[],)
 
     (options, args) = parser.parse_args()
     if not args:
