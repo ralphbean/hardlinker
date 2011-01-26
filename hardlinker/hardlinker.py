@@ -103,21 +103,23 @@ def eligibleForHardlink(
     st2,        # second file's status
     options):
 
-    result = (
-            # Must meet the following
-            # criteria:
-            (not isAlreadyHardlinked(st1, st2)) and         # NOT already hard linked
-            (st1[stat.ST_SIZE] == st2[stat.ST_SIZE]) and    # size is the same
-            (st1[stat.ST_SIZE] != 0 ) and                   # size is not zero
-            (st1[stat.ST_MODE] == st2[stat.ST_MODE]) and    # file mode is the same
-            (st1[stat.ST_UID] == st2[stat.ST_UID]) and      # owner user id is the same
-            (st1[stat.ST_GID] == st2[stat.ST_GID]) and      # owner group id is the same
-            ((st1[stat.ST_MTIME] == st2[stat.ST_MTIME]) or  # modified time is the same
-              (options.notimestamp)) and                    # OR date hashing is off
-            (st1[stat.ST_DEV] == st2[stat.ST_DEV])          # device is the same
-        )
-    if None:
-    # if not result:
+    options.__noopt__ = False
+    criteria = {
+        '__noopt__': lambda x, y: not isAlreadyHardlinked(x, y),
+        '__noopt__': lambda x, y: x[stat.ST_SIZE] == y[stat.ST_SIZE],
+        '__noopt__': lambda x, y: x[stat.ST_SIZE] != 0,
+        'nouid': lambda x, y: x[stat.ST_UID] == y[stat.ST_UID],
+        'nogid': lambda x, y: x[stat.ST_GID] == y[stat.ST_GID],
+        'notimestamp': lambda x, y: x[stat.ST_MTIME] == y[stat.ST_MTIME],
+        '__noopt__': lambda x, y: x[stat.ST_DEV] == y[stat.ST_DEV],
+    }
+
+    result = True
+    for opt, predicate in criteria.iteritems():
+        if not getattr(options, opt):
+            result = result and criteria(st1, st2)
+
+    if options.super_debug:
         print "\n***\n", st1
         print st2
         print "Already hardlinked: %s" % (not isAlreadyHardlinked(st1, st2))
@@ -287,17 +289,18 @@ def hardlink_identical_files(directories, filename, options):
             # we are already hardlinked to any of them.
             for (temp_filename,temp_stat_info) in file_hashes[file_hash]:
                 if isAlreadyHardlinked(stat_info,temp_stat_info):
-                    gStats.foundHardlink(temp_filename,filename,
-                        temp_stat_info)
+                    gStats.foundHardlink(temp_filename,filename,temp_stat_info)
                     break
             else:
                 # We did not find this file as hardlinked to any other file
                 # yet.  So now lets see if our file should be hardlinked to any
                 # of the other files with the same hash.
                 for (temp_filename,temp_stat_info) in file_hashes[file_hash]:
-                    if areFilesHardlinkable(work_file_info, (temp_filename, temp_stat_info),
-                            options):
-                        hardlinkfiles(temp_filename, filename, temp_stat_info, options)
+                    if areFilesHardlinkable(work_file_info,
+                                            (temp_filename,temp_stat_info),
+                                            options):
+                        hardlinkfiles(temp_filename, filename,
+                                      temp_stat_info, options)
                         break
                 else:
                     # The file should NOT be hardlinked to any of the other
@@ -414,6 +417,16 @@ def parseCommandLine():
     usage = "usage: %prog [options] directory [ directory ... ]"
     version = "%prog: " + VERSION
     parser = OptionParser(usage=usage, version=version)
+    parser.add_options(
+        "-d", "--debug"
+        help="Print debug output along the way",
+        action="store_true", dest="debug", default=False)
+
+    parser.add_options(
+        "-D", "--super-debug",
+        help="Print a ton of debug output along the way",
+        action="store_true", dest="super_debug", default=False)
+
     parser.add_option(
         "-f", "--filenames-equal",
         help="Filenames have to be identical",
@@ -478,12 +491,6 @@ def parseCommandLine():
     return options, args
 
 
-# Start of global declarations
-debug = None
-debug1 = None
-
-MAX_HASHES = 128 * 1024
-
 gStats = cStatistics()
 
 file_hashes = {}
@@ -520,15 +527,20 @@ def main():
                     # Ignore any mirror.pl files.  These are the files that
                     # start with ".in."
                     if MIRROR_PL_REGEX.match(entry):
+                        if options.super_debug:
+                            print "%s is a mirror.pl file, ignoring" % pathname
                         continue
                     # Ignore any RSYNC files.  These are files that have the
                     # format .FILENAME.??????
                     if RSYNC_TEMP_REGEX.match(entry):
+                        if options.super_debug:
+                            print "%s is a rsync file, ignoring" % pathname
                         continue
                 if os.path.islink(pathname):
-                    if debug1: print "%s: is a symbolic link, ignoring" % pathname
+                    if options.debug:
+                        print "%s: is a symbolic link, ignoring" % pathname
                     continue
-                if debug1 and os.path.isdir(pathname):
+                if options.debug and os.path.isdir(pathname):
                     print "%s is a directory!" % pathname
                 hardlink_identical_files(directories, pathname, options)
     if options.printstats:
