@@ -61,22 +61,29 @@ import re
 import stat
 import sys
 import time
+import hashlib
 
 from optparse import OptionParser
 
 # Hash functions
-# Create a hash from a file's size and time values
-def hash_size_time(size, time):
-    return (size ^ time) & (MAX_HASHES - 1);
+def hash_value(stat_info, options):
+    h = hashlib.md5()
 
-def hash_size(size):
-    return (size) & (MAX_HASHES - 1);
+    # We add size by default :P
+    h.update(str(stat_info[stat.ST_SIZE]))
 
-def hash_value(size, time, notimestamp):
-    if notimestamp:
-        return hash_size(size)
-    else:
-        return hash_size_time(size,time)
+    options_stat_map = {
+        'notimestamp' : stat.ST_MTIME,
+        'nofilemode' : stat.ST_MODE,
+        'nouid' : stat.ST_UID,
+        'nogid' : stat.ST_GID,
+    }
+
+    for opt, prop in options_stat_map.iteritems():
+        if not getattr(options, opt):
+            h.update(str(stat_info[prop]))
+
+    return str(h.hexdigest())
 
 # If two files have the same inode and are on the same device then they are
 # already hardlinked.
@@ -267,8 +274,8 @@ def hardlink_identical_files(directories, filename, options):
     # Is it a regular file?
     elif stat.S_ISREG(stat_info[stat.ST_MODE]):
         # Create the hash for the file.
-        file_hash = hash_value(stat_info[stat.ST_SIZE], stat_info[stat.ST_MTIME],
-            options.notimestamp)
+        file_hash = hash_value(stat_info, options)
+
         # Bump statistics count of regular files found.
         gStats.foundRegularFile()
         if options.verbose >= 2:
