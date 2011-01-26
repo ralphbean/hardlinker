@@ -1,0 +1,16 @@
+venv
+*.pyc
+*.swp
+ez_setup
+devdata.db
+tw2*
+virtualenv
+devdata.db*
+data
+build
+dist
+doc/build
+*.egg
+*.egg-info
+somedb.db
+python-eggs
