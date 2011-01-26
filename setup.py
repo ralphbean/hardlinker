@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.1'
+from hardlinker import __version__
 
 setup(name='hardlinker',
-      version=version,
+      version=__version__,
       description="Find identical files and hardlink them",
       long_description="""Forked from hardlink.py by John L. Villalovos"""
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+      classifiers=[],
       keywords='',
       author='Ralph Bean',
       author_email='ralph.bean@gmail.com',
@@ -19,6 +19,7 @@ setup(name='hardlinker',
       install_requires=[
           # -*- Extra requirements: -*-
       ],
+      scripts=['scripts/hardlinker.py']
       entry_points="""
       # -*- Entry points: -*-
       """,
